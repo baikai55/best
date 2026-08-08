@@ -254,7 +254,7 @@
       return;
     }
     const hls = new window.Hls({
-      enableWorker: true,
+      enableWorker: false,
       lowLatencyMode: false,
       maxBufferLength: 24,
       maxMaxBufferLength: 48,
