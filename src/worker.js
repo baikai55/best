@@ -262,7 +262,7 @@ async function resolvePlayback(detail, detailUrl) {
   }
   const chosen = pickBestSource(Array.isArray(sourcesList) ? sourcesList : []);
   if (!chosen) return null;
-  const proxyDomains = ["pianopic.com"];
+  const proxyDomains = ["pianopic.com", "streamhls.click"];
   let playUrl = chosen.file;
   try {
     const host = new URL(chosen.file).hostname;
@@ -272,7 +272,7 @@ async function resolvePlayback(detail, detailUrl) {
 }
 
 async function handleProxy(url) {
-  if (!/^https:\/\/(pianopic\.com)(\/|$)/i.test(url)) return json({ ok: false, error: "代理目标不允许" }, 403);
+  if (!/^https:\/\/(pianopic\.com|streamhls\.click)(\/|$)/i.test(url)) return json({ ok: false, error: "代理目标不允许" }, 403);
   const target = new URL(url);
   let upstream;
   try {

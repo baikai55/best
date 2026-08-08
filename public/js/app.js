@@ -297,10 +297,11 @@
     try {
       const image = publicImage(poster);
       if (!window.Artplayer) throw new Error('播放器加载失败，请刷新页面');
+      const isHls = playUrl.includes('/api/proxy') || /\.m3u8($|\?)/i.test(playUrl);
       const art = new window.Artplayer({
         container: '#art-player',
         url: playUrl,
-        type: 'm3u8',
+        type: isHls ? 'm3u8' : 'mp4',
         poster: image || '',
         autoplay: false,
         autoPlayback: false,
