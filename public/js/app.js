@@ -35,7 +35,7 @@
 
   const publicImage = (value) => {
     const url = String(value || '');
-    if (/^https:\/\/(?:pic\.xmbvxj\.cn|expose\.eisees\.com|v\.rn\d+\.xyz)\/[^"'\s]+$/.test(url)) return url;
+    if (/^https:\/\/(?:pic\.xmbvxj\.cn|expose\.eisees\.com|v\.rn\d+\.xyz|pics\.pornfhd\.com|media\.cfnav\.com)\/[^"'\s]+$/.test(url)) return url;
     if (/^data:image\//.test(url)) return url;
     return '';
   };
