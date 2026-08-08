@@ -159,7 +159,7 @@
   }
 
   function cardHTML(item) {
-    const href = linkTo({ name: 'detail', id: item.id });
+    const href = linkTo({ name: 'detail', id: item.slug || item.id });
     const meta = [item.duration, item.views != null ? `${item.views} 次` : ''].filter(Boolean).join(' · ');
     return `<a class="content-card" href="${esc(href)}" data-link>
       <div class="card-media" data-image-frame>${imageMarkup(item.coverUrl)}<span class="card-play" aria-hidden="true">▶</span></div>

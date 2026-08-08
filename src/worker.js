@@ -318,8 +318,7 @@ async function handlePosts(url) {
 
 async function handlePost(pathname) {
   const id = pathname.slice("/api/post/".length);
-  if (!/^\d+$/.test(id)) return json({ ok: false, error: "视频 ID 无效" }, 400);
-  const slug = null;
+  if (!/^[A-Za-z0-9_-]{1,200}$/.test(id)) return json({ ok: false, error: "视频 ID 无效" }, 400);
   const detailUrl = `${UPSTREAM}/video/${id}/`;
   let html;
   try {
@@ -342,7 +341,7 @@ async function handlePost(pathname) {
     // 播放地址获取失败时仍返回详情
   }
 
-  const related = parseCards(html).filter((r) => r.id !== id).slice(0, 12);
+  const related = parseCards(html).filter((r) => r.slug !== id).slice(0, 12);
 
   return json(
     {
