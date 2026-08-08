@@ -317,7 +317,7 @@
         miniProgressBar: true,
         lock: true,
         playsInline: true,
-        moreVideoAttr: { preload: 'metadata', playsInline: true, crossOrigin: 'anonymous' },
+        moreVideoAttr: { preload: 'metadata', playsInline: true },
         customType: { m3u8: attachHls },
       });
       state.art = art;
