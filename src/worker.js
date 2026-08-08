@@ -154,9 +154,11 @@ function parsePager(html) {
   return { hasNext: !!next, totalPages: next ? null : 1 };
 }
 
-function metaContent(html, prop) {
-  const m = html.match(new RegExp(`<meta[^>]*${prop}="([^"]*)"`));
-  return m ? m[1] : null;
+function metaContent(html, attr, value) {
+  const m = html.match(new RegExp(`<meta[^>]*${attr}="\\b${value}\\b"[^>]*content="([^"]*)"`));
+  if (m) return m[1];
+  const m2 = html.match(new RegExp(`<meta[^>]*content="([^"]*)"[^>]*${attr}="\\b${value}\\b"`));
+  return m2 ? m2[1] : null;
 }
 
 function parseDetail(html) {
@@ -170,10 +172,10 @@ function parseDetail(html) {
   const titleM = html.match(/<h1[^>]*class="entry-title"[^>]*>([\s\S]*?)<\/h1>/);
   const title = titleM ? decodeEntities(clean(titleM[1])) : "";
   if (!title) return null;
-  const duration = isoDurationToText(metaContent(html, "itemprop=duration"));
-  const cover = metaContent(html, "itemprop=thumbnailUrl");
-  const author = clean(metaContent(html, "itemprop=author"));
-  const viewsM = metaContent(html, "itemprop=interactionCount");
+  const duration = isoDurationToText(metaContent(html, "itemprop", "duration"));
+  const cover = metaContent(html, "itemprop", "thumbnailUrl");
+  const author = clean(metaContent(html, "itemprop", "author"));
+  const viewsM = metaContent(html, "itemprop", "interactionCount");
   const views = viewsM ? Number(viewsM.replace(/\D/g, "")) : null;
   return { videoId, videoVersion, encodedSources, title, duration, coverUrl: cover || null, author: author || null, views };
 }
