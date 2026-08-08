@@ -262,7 +262,64 @@ async function resolvePlayback(detail, detailUrl) {
   }
   const chosen = pickBestSource(Array.isArray(sourcesList) ? sourcesList : []);
   if (!chosen) return null;
-  return { playUrl: chosen.file, poster: config.img ? decodeEntities(String(config.img).replace(/\\\//g, "/")) : null };
+  const proxyDomains = ["pianopic.com"];
+  let playUrl = chosen.file;
+  try {
+    const host = new URL(chosen.file).hostname;
+    if (proxyDomains.some((d) => host === d || host.endsWith("." + d))) playUrl = "/api/proxy?url=" + encodeURIComponent(chosen.file);
+  } catch {}
+  return { playUrl, poster: config.img ? decodeEntities(String(config.img).replace(/\\\//g, "/")) : null };
+}
+
+async function handleProxy(url) {
+  if (!/^https:\/\/(pianopic\.com)(\/|$)/i.test(url)) return json({ ok: false, error: "代理目标不允许" }, 403);
+  const target = new URL(url);
+  let upstream;
+  try {
+    upstream = await fetch(url, { headers: { "User-Agent": UA, "Referer": UPSTREAM + "/" } });
+  } catch {
+    return json({ ok: false, error: "上游不可达" }, 502);
+  }
+  if (!upstream.ok) return json({ ok: false, error: "上游 " + upstream.status }, 502);
+  const ct = upstream.headers.get("Content-Type") || "";
+  const isPlaylist = /mpegurl|hls|octet-stream|text/i.test(ct) || target.pathname.endsWith(".m3u8");
+  if (isPlaylist) {
+    let text;
+    try {
+      text = await upstream.text();
+    } catch {
+      return json({ ok: false, error: "上游读取失败" }, 502);
+    }
+    const base = target.href;
+    const lines = text.split(/\r?\n/).map((line) => {
+      if (!line || line.startsWith("#")) {
+        const keyM = line.match(/^#EXT-X-KEY:[^"]*URI="([^"]+)"/);
+        if (keyM) {
+          const abs = new URL(keyM[1].replace(/\\\//g, "/"), base).href;
+          return line.replace(keyM[1], "/api/proxy?url=" + encodeURIComponent(abs));
+        }
+        return line;
+      }
+      const abs = new URL(line.replace(/\\\//g, "/"), base).href;
+      return "/api/proxy?url=" + encodeURIComponent(abs);
+    });
+    return new Response(lines.join("\n"), {
+      status: 200,
+      headers: {
+        "Content-Type": "application/vnd.apple.mpegurl; charset=utf-8",
+        "Access-Control-Allow-Origin": "*",
+        "Cache-Control": "public, max-age=60",
+      },
+    });
+  }
+  return new Response(upstream.body, {
+    status: 200,
+    headers: {
+      "Content-Type": ct || "video/MP2T",
+      "Access-Control-Allow-Origin": "*",
+      "Cache-Control": "public, max-age=86400",
+    },
+  });
 }
 
 function json(data, status = 200, cache = "public, max-age=30") {
@@ -377,6 +434,7 @@ export default {
     if (pathname === "/api/meta") return handleMeta();
     if (pathname === "/api/posts") return handlePosts(url);
     if (pathname.startsWith("/api/post/")) return handlePost(pathname);
+    if (pathname === "/api/proxy") return handleProxy(url.searchParams.get("url") || "");
     if (pathname === "/api/health") return json({ ok: true });
     if (env.ASSETS) return env.ASSETS.fetch(request);
     return new Response("Not Found", { status: 404 });
